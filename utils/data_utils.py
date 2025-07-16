@@ -2,6 +2,7 @@
 import pandas as pd
 from datetime import datetime, timedelta
 
+
 # --- hàm search_dataframe không đổi ---
 def search_dataframe(df: pd.DataFrame, search_term: str, search_column: str) -> pd.DataFrame:
     if df.empty or not search_term.strip() or search_column not in df.columns:
@@ -9,28 +10,48 @@ def search_dataframe(df: pd.DataFrame, search_term: str, search_column: str) -> 
     mask = df[search_column].astype(str).str.contains(search_term, case=False, na=False)
     return df[mask]
 
+
 # --- hàm filter_latest_tasks_by_name không đổi ---
 def filter_latest_tasks_by_name(df: pd.DataFrame):
+    """
+    Lọc DataFrame để chỉ giữ lại task có add_time mới nhất cho mỗi task_name.
+    Phiên bản đơn giản hóa, tự động nhận diện định dạng thời gian.
+    """
     if df.empty or 'add_time' not in df.columns or 'task_name' not in df.columns:
         return df
+
     df_copy = df.copy()
-    df_copy['add_time_dt'] = pd.to_datetime(df_copy['add_time'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
+
+    # --- THAY ĐỔI CHÍNH ---
+    # Gỡ bỏ tham số 'format' để pandas tự động nhận diện định dạng thời gian.
+    # Điều này giúp xử lý linh hoạt cả dữ liệu từ Google Form và từ App.
+    df_copy['add_time_dt'] = pd.to_datetime(df_copy['add_time'], errors='coerce')
+
+    # Loại bỏ các hàng không có thời gian hợp lệ
     df_copy.dropna(subset=['add_time_dt'], inplace=True)
     if df_copy.empty:
-        return df_copy
+        return df_copy.drop(columns=['add_time_dt'], errors='ignore')
+
+    # Sắp xếp theo tên và thời gian giảm dần
     df_sorted = df_copy.sort_values(by=['task_name', 'add_time_dt'], ascending=[True, False])
+
+    # Loại bỏ các bản sao, chỉ giữ lại bản ghi đầu tiên (mới nhất)
     df_latest = df_sorted.drop_duplicates(subset='task_name', keep='first')
-    return df_latest.drop(columns=['add_time_dt'])
+
+    # Bỏ cột datetime tạm thời trước khi trả về
+    return df_latest.drop(columns=['add_time_dt'], errors='ignore')
+
 
 # --- CẬP NHẬT HÀM process_deadline_tasks ---
 def process_deadline_tasks(df: pd.DataFrame):
     if df.empty:
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     df_filtered = df[df['task_status'] != 'Đã hoàn thành'].copy()
-    
+
     # THAY ĐỔI Ở ĐÂY: Cập nhật định dạng ngày tháng mới
-    df_filtered['deadline_dt'] = pd.to_datetime(df_filtered['task_deadline'], format='%d/%m/%Y %H:%M:%S', errors='coerce')
-    
+    df_filtered['deadline_dt'] = pd.to_datetime(df_filtered['task_deadline'], format='%d/%m/%Y %H:%M:%S',
+                                                errors='coerce')
+
     today = pd.Timestamp.now().normalize()
     df_valid = df_filtered.dropna(subset=['deadline_dt']).copy()
     df_valid = df_valid[df_valid['deadline_dt'] >= today]
@@ -47,6 +68,7 @@ def process_deadline_tasks(df: pd.DataFrame):
     due_later_df = due_later_df.sort_values(by='deadline_dt')
     return due_today_df, due_soon_df, due_later_df
 
+
 # --- CẬP NHẬT HÀM get_overdue_tasks ---
 def get_overdue_tasks(df: pd.DataFrame):
     if df.empty:
@@ -54,8 +76,9 @@ def get_overdue_tasks(df: pd.DataFrame):
     df_filtered = df[df['task_status'] != 'Đã hoàn thành'].copy()
 
     # THAY ĐỔI Ở ĐÂY: Cập nhật định dạng ngày tháng mới
-    df_filtered['deadline_dt'] = pd.to_datetime(df_filtered['task_deadline'], format='%d/%m/%Y %H:%M:%S', errors='coerce')
-    
+    df_filtered['deadline_dt'] = pd.to_datetime(df_filtered['task_deadline'], format='%d/%m/%Y %H:%M:%S',
+                                                errors='coerce')
+
     today = pd.Timestamp.now().normalize()
     df_valid = df_filtered.dropna(subset=['deadline_dt']).copy()
     df_overdue = df_valid[df_valid['deadline_dt'] < today].copy()
