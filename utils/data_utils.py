@@ -102,3 +102,17 @@ def get_current_hcm_time_str() -> str:
     hcm_tz = pytz.timezone('Asia/Ho_Chi_Minh')
     current_time_aware = datetime.now(hcm_tz)
     return current_time_aware.strftime('%d/%m/%Y %H:%M:%S')
+
+
+def get_id_from_url(url_string):
+    try:
+        # Bước 1: Tách chuỗi bởi ký tự '/', phần chứa ID sẽ nằm ở cuối cùng
+        id_part = url_string.split('/')[-1]
+
+        # Bước 2: Tách tiếp phần đó bởi ký tự '?' và lấy phần đầu tiên
+        task_id = id_part.split('?')[0]
+
+        return task_id
+    except IndexError:
+        # Trả về None nếu URL không đúng định dạng
+        return None
