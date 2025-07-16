@@ -78,6 +78,7 @@ def get_data_from_sheet(sheet_id: str):
         worksheet = spreadsheet.worksheet(TASK_SHEET_NAME)
         df = get_as_dataframe(worksheet, evaluate_formulas=True)
         # df.dropna(how='all', inplace=True)
+        print(df)
         return df
     except gspread.exceptions.WorksheetNotFound:
         st.error(f"Lỗi: Không tìm thấy trang tính (worksheet) có tên '{TASK_SHEET_NAME}'.")
