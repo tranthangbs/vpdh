@@ -7,3 +7,5 @@ SHEET_IDS = {
     "reports": "1rT5EfAGYArPD6pPcdLwx0zRyemiFXZqdAAuBU_-C_1g",
     # Thêm các key và ID cho các trang khác ở đây
 }
+
+TASK_SHEET_NAME = "Tasks_Processed"
