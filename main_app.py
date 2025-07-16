@@ -1,5 +1,4 @@
 import streamlit as st
-from utils.users import USERS
 
 # Cấu hình trang
 st.set_page_config(
@@ -36,7 +35,8 @@ if not st.session_state.logged_in:
         submitted = st.form_submit_button("Đăng nhập")
 
         if submitted:
-            user_data = USERS.get(username)
+            user_data = st.secrets.users.get(username)
+
             if user_data and user_data["password"] == password:
                 st.session_state.logged_in = True
                 st.session_state.username = username
@@ -44,6 +44,7 @@ if not st.session_state.logged_in:
                 st.rerun()
             else:
                 st.error("Tên đăng nhập hoặc mật khẩu không chính xác.")
+
 else:
     # --- TRANG CHỦ SAU KHI ĐĂNG NHẬP ---
     st.title(f"Xin chào, {st.session_state.username.capitalize()}!")
