@@ -69,6 +69,7 @@ def render_task_card(task_data: pd.Series, sheet_id: str, unique_key_part: int):
                 with form_cols[0]:
                     if st.form_submit_button("Lưu thay đổi", use_container_width=True, type="primary"):
                         updated_row_data = {
+                            'task_name': task_data.get('task_name', ''),
                             'add_time': get_current_hcm_time_str(),
                             'task_deadline': task_data.get('task_deadline', ''),
                             'task_link': task_data.get('task_link', ''),
