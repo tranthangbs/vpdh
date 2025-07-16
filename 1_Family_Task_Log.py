@@ -121,7 +121,7 @@ if st.session_state.active_view != 'none':
         with st.spinner("Đang chuẩn bị dữ liệu..."):
             df_tasks_raw = get_data_from_sheet(task_sheet_id)
             latest_df = filter_latest_tasks_by_name(df_tasks_raw) if not df_tasks_raw.empty else pd.DataFrame()
-        search_controls_container = st.container(border=True)
+        # search_controls_container = st.container(border=True)
         # with search_controls_container:
         with st.form("search_form"):
             st.write("Nhập thông tin tìm kiếm:")
