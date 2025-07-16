@@ -1,6 +1,7 @@
 # utils/data_utils.py
 import pandas as pd
 from datetime import datetime, timedelta
+import pytz
 
 
 # --- hàm search_dataframe không đổi ---
@@ -15,27 +16,30 @@ def search_dataframe(df: pd.DataFrame, search_term: str, search_column: str) -> 
 def filter_latest_tasks_by_name(df: pd.DataFrame):
     """
     Lọc DataFrame để chỉ giữ lại task có add_time mới nhất cho mỗi task_name.
+    Phiên bản đơn giản hóa, tự động nhận diện định dạng thời gian.
     """
     if df.empty or 'add_time' not in df.columns or 'task_name' not in df.columns:
         return df
 
     df_copy = df.copy()
 
-    # --- THAY ĐỔI Ở ĐÂY ---
-    # Cập nhật định dạng cho cột 'add_time' để khớp với định dạng mới
-    df_copy['add_time_dt'] = pd.to_datetime(
-        df_copy['add_time'],
-        format='%d/%m/%Y %H:%M:%S', # <-- Sửa định dạng ở đây
-        errors='coerce'
-    )
+    # --- THAY ĐỔI CHÍNH ---
+    # Gỡ bỏ tham số 'format' để pandas tự động nhận diện định dạng thời gian.
+    # Điều này giúp xử lý linh hoạt cả dữ liệu từ Google Form và từ App.
+    df_copy['add_time_dt'] = pd.to_datetime(df_copy['add_time'], errors='coerce')
 
+    # Loại bỏ các hàng không có thời gian hợp lệ
     df_copy.dropna(subset=['add_time_dt'], inplace=True)
     if df_copy.empty:
         return df_copy.drop(columns=['add_time_dt'], errors='ignore')
 
+    # Sắp xếp theo tên và thời gian giảm dần
     df_sorted = df_copy.sort_values(by=['task_name', 'add_time_dt'], ascending=[True, False])
+
+    # Loại bỏ các bản sao, chỉ giữ lại bản ghi đầu tiên (mới nhất)
     df_latest = df_sorted.drop_duplicates(subset='task_name', keep='first')
 
+    # Bỏ cột datetime tạm thời trước khi trả về
     return df_latest.drop(columns=['add_time_dt'], errors='ignore')
 
 
@@ -84,3 +88,14 @@ def get_overdue_tasks(df: pd.DataFrame):
     df_overdue['days_overdue'] = (today - df_overdue['deadline_dt']).dt.days
     df_overdue = df_overdue.sort_values(by='deadline_dt', ascending=True)
     return df_overdue
+
+
+def get_current_hcm_time_str() -> str:
+    """
+    Lấy thời gian hiện tại theo múi giờ GMT+7 (Asia/Ho_Chi_Minh)
+    và trả về dưới dạng chuỗi đã được định dạng.
+    Đây là hàm duy nhất nên được dùng để lấy thời gian cho ứng dụng.
+    """
+    hcm_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+    current_time_aware = datetime.now(hcm_tz)
+    return current_time_aware.strftime('%d/%m/%Y %H:%M:%S')
