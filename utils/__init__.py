@@ -7,9 +7,6 @@ bạn có thể import trực tiếp từ utils.
 # Từ config.py
 from .config import SHEET_IDS
 
-# Từ users.py
-from .users import USERS
-
 # Từ google_sheet_utils.py
 from .google_sheet_utils import get_data_from_sheet, get_sheet_headers, add_row_from_dict
 
