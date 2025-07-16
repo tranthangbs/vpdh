@@ -162,10 +162,11 @@ if st.session_state.active_view != 'none':
             latest_df = filter_latest_tasks_by_name(df_tasks_raw) if not df_tasks_raw.empty else pd.DataFrame()
         filter_container = st.container(border=True)
         # with filter_container:
+        st.markdown("<h1 style='text-align: center;'>Tra cứu task sắp đến hạn</h1>", unsafe_allow_html=True)
         with st.form("deadline_filter_form"):
             st.write("**Bộ lọc tìm kiếm deadline:**")
             po_list = latest_df['task_po'].dropna().unique().tolist()
-            selected_pos = st.multiselect("Chọn người thực hiện (PO):", options=po_list)
+            selected_pos = st.segmented_control("Chọn thư ký:", options=po_list, selection_mode="multi")
             submitted = st.form_submit_button("Tìm kiếm Deadline")
             if submitted:
                 filtered_df = latest_df[latest_df['task_po'].isin(selected_pos)] if selected_pos else latest_df
@@ -197,15 +198,16 @@ if st.session_state.active_view != 'none':
             df_tasks_raw = get_data_from_sheet(task_sheet_id)
             latest_df = filter_latest_tasks_by_name(df_tasks_raw) if not df_tasks_raw.empty else pd.DataFrame()
         filter_container = st.container(border=True)
-        with filter_container:
-            with st.form("overdue_filter_form"):
-                st.write("**Lọc các task đã quá hạn:**")
-                po_list = latest_df['task_po'].dropna().unique().tolist()
-                selected_pos = st.multiselect("Chọn người thực hiện (PO):", options=po_list)
-                submitted = st.form_submit_button("Tìm Task Quá Hạn")
-                if submitted:
-                    filtered_df = latest_df[latest_df['task_po'].isin(selected_pos)] if selected_pos else latest_df
-                    st.session_state.overdue_results_df = get_overdue_tasks(filtered_df)
+        # with filter_container:
+        st.markdown("<h1 style='text-align: center;'>Tra cứu task quá hạn</h1>", unsafe_allow_html=True)
+        with st.form("overdue_filter_form"):
+            st.write("**Lọc các task đã quá hạn:**")
+            po_list = latest_df['task_po'].dropna().unique().tolist()
+            selected_pos = st.segmented_control("Chọn thư ký:", options=po_list, selection_mode="multi")
+            submitted = st.form_submit_button("Tìm Task Quá Hạn")
+            if submitted:
+                filtered_df = latest_df[latest_df['task_po'].isin(selected_pos)] if selected_pos else latest_df
+                st.session_state.overdue_results_df = get_overdue_tasks(filtered_df)
         if st.session_state.overdue_results_df is not None:
             results_df = st.session_state.overdue_results_df
             with st.container(border=True):
