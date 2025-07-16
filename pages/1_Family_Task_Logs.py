@@ -15,7 +15,8 @@ from utils import (
     render_task_card,
     process_deadline_tasks,
     get_overdue_tasks,
-    filter_latest_tasks_by_name
+    filter_latest_tasks_by_name,
+    get_current_hcm_time_str
 )
 
 # --- CẤU HÌNH TRANG VÀ KIỂM TRA ĐĂNG NHẬP ---
@@ -110,13 +111,14 @@ if st.session_state.active_view != 'none':
                     else:
                         new_row_data = {
                             'task_name': task_name,
-                            'add_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            'add_time': get_current_hcm_time_str(),
                             'task_id': f"TASK-{int(datetime.now().timestamp())}",
                             'task_des': task_des,
                             'task_report_to': st.session_state.username,
                             'task_po': task_po,
                             'task_status': "Mới tạo"
                         }
+
                         with st.spinner("Đang lưu..."):
                             success = add_row_from_dict(task_sheet_id, new_row_data)
                         if success:
