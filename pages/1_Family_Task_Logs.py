@@ -16,7 +16,8 @@ from utils import (
     process_deadline_tasks,
     get_overdue_tasks,
     filter_latest_tasks_by_name,
-    get_current_hcm_time_str
+    get_current_hcm_time_str,
+    backfill_data
 )
 
 # --- CẤU HÌNH TRANG VÀ KIỂM TRA ĐĂNG NHẬP ---
@@ -76,6 +77,14 @@ st.markdown("---")
 
 # --- KHU VỰC HIỂN THỊ NỘI DUNG ---
 task_sheet_id = SHEET_IDS.get("tasks")
+with st.spinner("Đang tải và xử lý dữ liệu..."):
+    df_tasks_raw = get_data_from_sheet(task_sheet_id)
+
+    # BƯỚC MỚI: TỰ ĐỘNG FILL DỮ LIỆU
+    df_backfilled = backfill_data(df_tasks_raw) if not df_tasks_raw.empty else df_tasks_raw
+
+    # Lọc ra task mới nhất từ dữ liệu đã được làm giàu
+    latest_df = filter_latest_tasks_by_name(df_backfilled) if not df_backfilled.empty else df_backfilled
 
 if st.session_state.active_view == 'none':
     st.info("👋 Chào mừng bạn. Vui lòng chọn một chức năng từ thanh công cụ bên trên.")
@@ -120,7 +129,7 @@ if st.session_state.active_view != 'none':
     if st.session_state.active_view == 'search':
         with st.spinner("Đang chuẩn bị dữ liệu..."):
             df_tasks_raw = get_data_from_sheet(task_sheet_id)
-            latest_df = filter_latest_tasks_by_name(df_tasks_raw) if not df_tasks_raw.empty else pd.DataFrame()
+            # latest_df = filter_latest_tasks_by_name(df_tasks_raw) if not df_tasks_raw.empty else pd.DataFrame()
         search_controls_container = st.container(border=True)
         # with search_controls_container:
         with st.form("search_form"):
