@@ -1,5 +1,6 @@
 # utils/data_utils.py
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 import pytz
 
@@ -116,3 +117,40 @@ def get_id_from_url(url_string):
     except IndexError:
         # Trả về None nếu URL không đúng định dạng
         return None
+
+
+def backfill_data(df: pd.DataFrame):
+    """
+    Tự động điền các giá trị bị thiếu cho một số cột được chỉ định,
+    bằng cách lấy giá trị gần nhất của cùng một task trong quá khứ.
+    """
+    if df.empty or 'task_name' not in df.columns:
+        return df
+
+    df_copy = df.copy()
+
+    # --- BƯỚC MỚI: CHUẨN HÓA DỮ LIỆU RỖNG ---
+    # Chuyển đổi tất cả các ô có chuỗi rỗng thành giá trị NaN (Not a Number)
+    # để hàm ffill() có thể hoạt động chính xác.
+    df_copy.replace('', np.nan, inplace=True)
+
+    # Chuyển đổi cột thời gian để sắp xếp chính xác
+    df_copy['add_time_dt'] = pd.to_datetime(df_copy['add_time'], format='%d/%m/%Y %H:%M:%S', errors='coerce')
+
+    # Sắp xếp theo tên và thời gian tăng dần (từ cũ đến mới)
+    df_copy.sort_values(by=['task_name', 'add_time_dt'], ascending=True, inplace=True)
+
+    # Danh sách các cột an toàn để tự động điền
+    cols_to_fill = [
+        'task_deadline',
+        'task_link',
+        'task_des',
+        'task_report_to',
+        'task_po'
+    ]
+
+    # Chỉ áp dụng ffill cho các cột đã chọn trong mỗi nhóm task_name
+    df_copy[cols_to_fill] = df_copy.groupby('task_name')[cols_to_fill].ffill()
+
+    # Bỏ cột tạm thời
+    return df_copy.drop(columns=['add_time_dt'], errors='ignore')
